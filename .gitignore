@@ -1,0 +1,13 @@
+﻿################################################################################
+# This .gitignore file was automatically created by Microsoft(R) Visual Studio.
+################################################################################
+
+/src/AwaitInGameLoopSample/Release
+/src/AwaitInGameLoopSample/x64
+*.user
+/src/DirectXTK/Bin/Desktop_2015/x64
+/src/ipch
+/src/x64
+*.opensdf
+*.sdf
+*.suo
