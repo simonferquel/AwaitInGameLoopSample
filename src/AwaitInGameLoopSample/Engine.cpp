@@ -5,6 +5,7 @@
 #include <dxgi1_3.h>
 #include <DirectXColors.h>
 #include <vector>
+#include <list>
 #include "Timer.h"
 #include "AnimatedText.h"
 #include "dx_exception.h"
@@ -26,8 +27,8 @@ private:
 	D3D_FEATURE_LEVEL _featureLevel;
 	GameClock _clock;
 	DirectX::XMFLOAT4 _bgColor;
-	vector<Timer> _activeTimers;
-	vector<GameAwaitablePromise<void>> _clickAwaiters;
+	list<Timer> _activeTimers;
+	list<GameAwaitableUniquePromise<void>> _clickAwaiters;
 	vector<shared_ptr<SceneObject>> _sceneObjects;
 public:
 	impl(HWND hwnd) : _hwnd(hwnd), _bgColor(.0f, .0f, .0f, 1.0f) {
@@ -87,17 +88,20 @@ public:
 	void changeBackground(const DirectX::XMFLOAT4 & color) {
 		_bgColor = color;
 	}
-	GameAwaitablePromise<void> waitFor(steady_clock::duration duration) {
-		Timer result(_clock.currentFrameTime() + duration);
-		_activeTimers.push_back(result);
-		return result.getPromise();
+	GameAwaitableUniquePromise<void>* waitFor(steady_clock::duration duration) {
+		_activeTimers.emplace_front(_clock.currentFrameTime() + duration);
+		return &_activeTimers.begin()->getPromise();
 	}
 	void run() {
 		_clock.onBeginNewFrame();
-		for (int i = _activeTimers.size() - 1; i >= 0; --i) {
-			if (_activeTimers[i].onTick(_clock.currentFrameTime())) {
-				_activeTimers.erase(_activeTimers.begin() + i);
+		for (auto it = _activeTimers.begin(); it != _activeTimers.end(); ) {
+			auto next = it;
+			++next;
+			if (it->onTick(_clock.currentFrameTime())) {
+				_activeTimers.erase(it);
 			}
+
+			it = next;
 		}
 		for (auto& obj : _sceneObjects) {
 			obj->updateState(_clock);
@@ -115,7 +119,7 @@ public:
 	}
 	void onClick() {
 		
-		std::vector<GameAwaitablePromise<void>> toResume(std::move(_clickAwaiters));
+		std::list<GameAwaitableUniquePromise<void>> toResume(std::move(_clickAwaiters));
 		_clickAwaiters.clear();
 		for (auto& i : toResume) {
 			i.setResult();
@@ -126,10 +130,9 @@ public:
 	}
 
 
-	GameAwaitablePromise<void> waitForMouseClick() {
-		GameAwaitablePromise<void> promise;
-		_clickAwaiters.push_back(promise);
-		return promise;
+	GameAwaitableUniquePromise<void>* waitForMouseClick() {
+		_clickAwaiters.emplace_front();
+		return &_clickAwaiters.front();
 	}
 
 	void addSceneObject(const std::shared_ptr<SceneObject>& object) {
@@ -177,11 +180,11 @@ void Engine::removeSceneObject(const std::shared_ptr<SceneObject>& object)
 	_->removeSceneObject(object);
 }
 
-GameAwaitablePromise<void> Engine::waitFor(std::chrono::steady_clock::duration duration) {
+GameAwaitableUniquePromise<void>* Engine::waitFor(std::chrono::steady_clock::duration duration) {
 	return _->waitFor(duration);
 }
 
 
-GameAwaitablePromise<void> Engine::waitForMouseClick() {
+GameAwaitableUniquePromise<void>* Engine::waitForMouseClick() {
 	return _->waitForMouseClick();
 }

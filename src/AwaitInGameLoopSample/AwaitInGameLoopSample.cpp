@@ -68,9 +68,10 @@ int APIENTRY _tWinMain(_In_ HINSTANCE hInstance,
 		return FALSE;
 	}
 
+	concurrency::task<void> t;
 	// instanciation of the engine (and registering the gameLogic function as the startup callback)
-	Engine engine(window, [](Engine* e) {
-		gameLogic(e);
+	Engine engine(window, [&t](Engine* e) {
+		t=gameLogic(e);
 	});
 	// Main message loop (if there is a message to process, process it, else, make the engine run):
 	while (true) {

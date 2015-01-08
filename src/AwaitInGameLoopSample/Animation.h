@@ -36,7 +36,7 @@ class Animation : public aligned16, public DirectX::AlignedNew<Animation<T, TInt
 private:
 	T _startValue;
 	T _endValue;
-	GameAwaitablePromise<void> _promise;
+	GameAwaitableUniquePromise<void> _promise;
 	std::chrono::steady_clock::duration _ellapsed;
 	std::chrono::steady_clock::duration _duration;
 	TInterpolation _interpolation;
@@ -67,7 +67,7 @@ public:
 		return lerp(_startValue, _endValue, progress);
 	}
 
-	GameAwaitablePromise<void> getPromise() const {
+	GameAwaitableUniquePromise<void>& getPromise()  {
 		return _promise;
 	}
 };

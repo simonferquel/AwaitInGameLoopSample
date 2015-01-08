@@ -159,22 +159,22 @@ void AnimatedText::draw(ID3D11DeviceContext * deviceContext, ID3D11RenderTargetV
 	deviceContext->Draw(6, 0);
 }
 
-GameAwaitablePromise<void> AnimatedText::fadeIn()
+GameAwaitableUniquePromise<void>* AnimatedText::fadeIn()
 {
 	_opacityAnim.reset(new Animation<float>(duration_cast<steady_clock::duration>(1s), _opacity, 1.0f, Interoplate_Linear()));
 	XMFLOAT4X4A transFrom(&_transform.m[0][0]);
 	XMFLOAT4X4A transTo;
 	XMStoreFloat4x4A(&transTo, XMMatrixIdentity());
 	_transformAnim.reset(new Animation<DirectX::XMFLOAT4X4A>(duration_cast<steady_clock::duration>(1s), transFrom, transTo, Interoplate_Linear()));
-	return _transformAnim->getPromise();
+	return &_transformAnim->getPromise();
 }
 
-GameAwaitablePromise<void> AnimatedText::fadeOut()
+GameAwaitableUniquePromise<void>* AnimatedText::fadeOut()
 {
 	_opacityAnim.reset(new Animation<float>(duration_cast<steady_clock::duration>(1s), _opacity, 0.0f, Interoplate_Linear()));
 	XMFLOAT4X4A transFrom(&_transform.m[0][0]);
 	XMFLOAT4X4A transTo;
 	XMStoreFloat4x4A(&transTo, XMMatrixScaling(0,0,1.0f));
 	_transformAnim.reset(new Animation<DirectX::XMFLOAT4X4A>(duration_cast<steady_clock::duration>(1s), transFrom, transTo, Interoplate_Linear()));
-	return _transformAnim->getPromise();
+	return &_transformAnim->getPromise();
 }

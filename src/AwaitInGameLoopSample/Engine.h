@@ -24,9 +24,9 @@ public:
 	void removeSceneObject(const std::shared_ptr<SceneObject>& object);
 	// the timers are implemented as simple state machines (updated at each run call) 
 	// and exposed as awaitable coroutines
-	GameAwaitablePromise<void> waitFor(std::chrono::steady_clock::duration duration);
+	GameAwaitableUniquePromise<void>* waitFor(std::chrono::steady_clock::duration duration);
 	// user input can also be exposed as an awaitable coroutine
-	GameAwaitablePromise<void> waitForMouseClick();
+	GameAwaitableUniquePromise<void>* waitForMouseClick();
 };
 
 

@@ -27,7 +27,7 @@ public:
 	virtual void draw(ID3D11DeviceContext * deviceContext, ID3D11RenderTargetView * rtv) override;
 
 	// animations can be considered as coroutines that will eventually complete
-	GameAwaitablePromise<void> fadeIn();
-	GameAwaitablePromise<void> fadeOut();
+	GameAwaitableUniquePromise<void>* fadeIn();
+	GameAwaitableUniquePromise<void>* fadeOut();
 };
 
