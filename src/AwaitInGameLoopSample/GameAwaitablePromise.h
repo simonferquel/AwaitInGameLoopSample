@@ -18,7 +18,7 @@ private:
 		bool _isReady;
 		std::experimental::resumable_handle<> _resumeCB;
 	public:
-		SharedState() : _isReady(false) {}
+		SharedState() : _isReady(false), _resumeCB(nullptr){}
 		explicit SharedState(const T& value) : _isReady(true), _value(value) {}
 
 		T value() const {
@@ -31,10 +31,12 @@ private:
 		void setCallback(const std::experimental::resumable_handle<>& callback) {
 			_resumeCB = callback;
 		}
-
-		void setResult(const T& value) {
-			_value = value;
-			_resumeCB();
+		template<typename U>
+		void setResult(U&& value) {
+			_value = std::forward<U>(value);
+			if (_resumeCB) {
+				_resumeCB();
+			}
 		}
 	};
 	std::shared_ptr<SharedState> _state;
@@ -51,6 +53,11 @@ public:
 	}
 	T await_resume() const {
 		return _state->value();
+	}
+
+	template<typename U>
+	void setResult(U&& value) {
+		_state->setResult(std::forward<U>(value));
 	}
 };
 
@@ -101,6 +108,62 @@ public:
 	void await_resume() const {
 	}
 };
+
+template<typename T>
+struct NoPromise {
+
+};
+
+namespace std {
+	namespace experimental {
+		
+		template <class TResult, class... _Whatever>
+		struct resumable_traits<GameAwaitableSharedPromise<TResult>, _Whatever...> {
+			struct promise_type {
+				GameAwaitableSharedPromise<TResult> _MyPromise;
+
+				GameAwaitableSharedPromise<TResult> get_return_object()
+				{
+					return _MyPromise;
+				}
+
+				suspend_never initial_suspend()
+				{
+					return{};
+				}
+				suspend_never final_suspend()
+				{
+					return{};
+				}
+
+				template <class _Ut = TResult>
+				enable_if_t<is_same<_Ut, void>::value>
+					set_result()
+				{
+					_MyPromise.setResult();
+				}
+
+				template <class _Ut>
+				enable_if_t<!is_same<TResult, void>::value && !is_same<_Ut, void>::value>
+					set_result(_Ut&& _Value)
+				{
+					_MyPromise.setResult(std::forward<_Ut>(_Value));
+				}
+
+				
+
+				bool cancellation_requested() const
+				{
+					return false;
+				}
+
+				void set_exception(std::exception_ptr exc) {
+					// this promise does not support exception
+				}
+			};
+		};
+	}
+}
 
 
 class coroutine_abandoned : public std::exception {};
@@ -163,7 +226,7 @@ private:
 	bool _ranToCompletion;
 
 public:
-	GameAwaitableUniquePromise() : _isReady(false), _ranToCompletion(false), _resumeCB(nullptr) 
+	GameAwaitableUniquePromise() : _isReady(false), _ranToCompletion(false), _resumeCB(nullptr)
 	{
 	}
 	explicit GameAwaitableUniquePromise(bool ready) : _isReady(ready), _ranToCompletion(ready), _resumeCB(nullptr)
@@ -183,13 +246,13 @@ public:
 	GameAwaitableUniquePromise& operator=(const GameAwaitableUniquePromise<void>&) = delete;
 	GameAwaitableUniquePromise(GameAwaitableUniquePromise<void>&&) = delete;
 	GameAwaitableUniquePromise& operator=(GameAwaitableUniquePromise<void>&&) = delete;
-	bool await_ready()  {
+	bool await_ready() {
 		return _isReady;
 	}
 	void await_suspend(std::experimental::resumable_handle<> _ResumeCb) {
 		_resumeCB = _ResumeCb;
 	}
-	void await_resume( )  {
+	void await_resume() {
 		if (!_ranToCompletion) {
 			throw coroutine_abandoned();
 		}

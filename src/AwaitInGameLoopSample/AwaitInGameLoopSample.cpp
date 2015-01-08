@@ -17,10 +17,10 @@
 using namespace std::chrono;
 
 // the whole state machine is expressed in a simple and readable sequencial way
-concurrency::task<void> gameLogic(Engine* engine) {
+GameAwaitableSharedPromise<void> gameLogic(Engine* engine) {
 	auto animatedText = std::make_shared<AnimatedText>();
 	engine->addSceneObject(animatedText);
-	std::default_random_engine re;
+	std::default_random_engine re((unsigned int)(std::chrono::steady_clock::now().time_since_epoch().count()));
 	std::uniform_real_distribution<float> dist(0.0f, 0.7f);
 	while (true) {
 		__await animatedText->fadeIn();
@@ -68,10 +68,9 @@ int APIENTRY _tWinMain(_In_ HINSTANCE hInstance,
 		return FALSE;
 	}
 
-	concurrency::task<void> t;
 	// instanciation of the engine (and registering the gameLogic function as the startup callback)
-	Engine engine(window, [&t](Engine* e) {
-		t=gameLogic(e);
+	Engine engine(window, [](Engine* e) {
+		gameLogic(e);
 	});
 	// Main message loop (if there is a message to process, process it, else, make the engine run):
 	while (true) {
