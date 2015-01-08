@@ -6,13 +6,13 @@
 class Timer
 {
 private:
-	GameAwaitablePromise<void> _promise;
+	GameAwaitableUniquePromise<void> _promise;
 
 	std::chrono::steady_clock::time_point _resumeTimePoint;
 public:
 	Timer(const std::chrono::steady_clock::time_point& resumeTimePoint);
 	bool onTick(const std::chrono::steady_clock::time_point& currentTimePoint);
-	GameAwaitablePromise<void> getPromise() const {
+	GameAwaitableUniquePromise<void>& getPromise()  {
 		return _promise;
 	}
 };

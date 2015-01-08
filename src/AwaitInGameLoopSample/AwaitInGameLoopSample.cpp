@@ -23,7 +23,8 @@ concurrency::task<void> gameLogic(Engine* engine) {
 	std::default_random_engine re;
 	std::uniform_real_distribution<float> dist(0.0f, 0.7f);
 	while (true) {
-		__await animatedText->fadeIn();
+		auto& t = animatedText->fadeIn();
+		__await t;
 		__await engine->waitForMouseClick();
 
 		__await animatedText->fadeOut();
