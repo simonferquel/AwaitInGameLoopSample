@@ -147,6 +147,7 @@ public:
 		_ranToCompletion = true;
 		_isReady = true;
 		if (_resumeCB) {
+
 			_resumeCB();
 		}
 	}
