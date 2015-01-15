@@ -17,7 +17,7 @@
 using namespace std::chrono;
 
 // the whole state machine is expressed in a simple and readable sequencial way
-GameAwaitableSharedPromise<void> gameLogic(Engine* engine) {
+NoPromise gameLogic(Engine* engine) {
 	auto animatedText = std::make_shared<AnimatedText>();
 	engine->addSceneObject(animatedText);
 	std::default_random_engine re((unsigned int)(std::chrono::steady_clock::now().time_since_epoch().count()));

@@ -109,61 +109,6 @@ public:
 	}
 };
 
-template<typename T>
-struct NoPromise {
-
-};
-
-namespace std {
-	namespace experimental {
-		
-		template <class TResult, class... _Whatever>
-		struct resumable_traits<GameAwaitableSharedPromise<TResult>, _Whatever...> {
-			struct promise_type {
-				GameAwaitableSharedPromise<TResult> _MyPromise;
-
-				GameAwaitableSharedPromise<TResult> get_return_object()
-				{
-					return _MyPromise;
-				}
-
-				suspend_never initial_suspend()
-				{
-					return{};
-				}
-				suspend_never final_suspend()
-				{
-					return{};
-				}
-
-				template <class _Ut = TResult>
-				enable_if_t<is_same<_Ut, void>::value>
-					set_result()
-				{
-					_MyPromise.setResult();
-				}
-
-				template <class _Ut>
-				enable_if_t<!is_same<TResult, void>::value && !is_same<_Ut, void>::value>
-					set_result(_Ut&& _Value)
-				{
-					_MyPromise.setResult(std::forward<_Ut>(_Value));
-				}
-
-				
-
-				bool cancellation_requested() const
-				{
-					return false;
-				}
-
-				void set_exception(std::exception_ptr exc) {
-					// this promise does not support exception
-				}
-			};
-		};
-	}
-}
 
 
 class coroutine_abandoned : public std::exception {};
@@ -282,4 +227,98 @@ void await_suspend(GameAwaitableUniquePromise<T>* p, std::experimental::resumabl
 template<typename T>
 T await_resume(GameAwaitableUniquePromise<T>* p) {
 	return p->await_resume();
+}
+
+
+struct NoPromise {
+	~NoPromise(){}
+};
+
+
+namespace std {
+	namespace experimental {
+
+		template <class... _Whatever>
+		struct resumable_traits<NoPromise, _Whatever...> {
+			struct promise_type {
+				
+
+				NoPromise get_return_object()
+				{
+					return NoPromise();
+				}
+
+				suspend_never initial_suspend()
+				{
+					return{};
+				}
+				suspend_never final_suspend()
+				{
+					return{};
+				}
+
+				void set_result()
+				{
+				}
+
+
+
+
+				bool cancellation_requested() const
+				{
+					return false;
+				}
+
+				void set_exception(std::exception_ptr exc) {
+					// this promise does not support exception
+				}
+			};
+		};
+
+		template <class TResult, class... _Whatever>
+		struct resumable_traits<GameAwaitableSharedPromise<TResult>, _Whatever...> {
+			struct promise_type {
+				GameAwaitableSharedPromise<TResult> _MyPromise;
+
+				GameAwaitableSharedPromise<TResult> get_return_object()
+				{
+					return _MyPromise;
+				}
+
+				suspend_never initial_suspend()
+				{
+					return{};
+				}
+				suspend_never final_suspend()
+				{
+					return{};
+				}
+
+				template <class _Ut = TResult>
+				enable_if_t<is_same<_Ut, void>::value>
+					set_result()
+				{
+					_MyPromise.setResult();
+				}
+
+				template <class _Ut>
+				enable_if_t<!is_same<TResult, void>::value && !is_same<_Ut, void>::value>
+					set_result(_Ut&& _Value)
+				{
+					_MyPromise.setResult(std::forward<_Ut>(_Value));
+				}
+
+
+
+				bool cancellation_requested() const
+				{
+					return false;
+				}
+
+				void set_exception(std::exception_ptr exc) {
+					// this promise does not support exception
+				}
+			};
+		};
+	}
 }
