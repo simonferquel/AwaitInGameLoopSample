@@ -1,6 +1,8 @@
 AwaitInGameLoopSample
 =====================
 
+update: a detailed article is available here: https://github.com/simonferquel/AwaitInGameLoopSample/wiki
+
 This sample demonstrate a not so obvious use of await and awaitable coroutines for video games or other rendering loop based programs.
 Await is not tied to any type of coroutines (it is not dedicated to thread and async IO) and it has been designed to be extensible : any developper can wrap any kind of coroutine in an awaitable aware object, and that is great !
 
